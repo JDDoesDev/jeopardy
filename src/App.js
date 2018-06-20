@@ -11,6 +11,7 @@ import _ from 'lodash';
 
 import logo from './logo.svg';
 import './App.css';
+import './scss/custom.scss';
 import Gameboard from './component/gameboard';
 
 
@@ -24,11 +25,15 @@ class App extends Component {
     this.state = {
       response: false,
       endpoint: "http://127.0.0.1:4001",
-      welcome: 'Welcome to React!',
       fetchComplete: false,
       rawClues: [],
       clues: [],
-      currentRound: 'jeopardy'
+      jeopardy: [],
+      doubleJeopardy: [],
+      finalJeopardy: [],
+      currentRound: '',
+      socket: [],
+      sortedClues: false
     };
 
     if (URL) {
@@ -49,22 +54,54 @@ class App extends Component {
     }
   }
 
-  formatClues = (rawData) => {
-    let clues = _.groupBy(rawData, 'category');
-    this.setState({clues});
-
-  }
-
   componentDidMount() {
     const { endpoint } = this.state;
 
     this.socket = socketIOClient(endpoint);
-    this.socket.on("hello world", data => this.setState({ response: data }));
+    this.setState({ socket: this.socket });
+  }
 
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.fetchComplete !== this.state.fetchComplete) {
+      this.selectCategories();
+    }
+  }
 
-    this.socket.on('prepare', (data) => {
-      this.setState({welcome: data});
-    });
+  formatClues = (rawData) => {
+    let clues = _.groupBy(rawData, 'category');
+    this.setState({clues});
+  }
+
+  cleanUpCategories = (categoryArrays, final = false) => {
+    // Take randomized categories, put them in one array, then sort into objects
+    const categoryArray = [].concat(...categoryArrays);
+    const categoryObject = _.groupBy(categoryArray, 'category');
+    let completed = {};
+
+    for (let property in categoryObject) {
+      completed[property] = _(categoryObject[property]).uniqBy('difficulty').sortBy('difficulty').value();
+      if (final === true) {
+        completed[property] = _.last(completed[property]);
+      }
+    }
+    return completed;
+  }
+
+  selectCategories = () => {
+    if (this.state.clues) {
+      const categories = _.sampleSize(this.state.clues, 13);
+      const allJeopardy = categories.slice(0,6);
+      const allDoubleJeopardy = categories.slice(6,12);
+      const allFinalJeopardy = categories.slice(12);
+
+      const jeopardy = this.cleanUpCategories(allJeopardy);
+      const doubleJeopardy = this.cleanUpCategories(allDoubleJeopardy);
+      const finalJeopardy = this.cleanUpCategories(allFinalJeopardy, true);
+
+      this.setState({ roundClues: { jeopardy, doubleJeopardy, finalJeopardy }, sortedClues: true }, () => {
+        this.state.socket.emit('inner', this.state.clues);
+      });
+    }
   }
 
   testEmitter = () => {
@@ -79,15 +116,14 @@ class App extends Component {
 
   render() {
     let gameboardComp = 'Loading clues...';
-    if (this.state.fetchComplete) {
-
-      gameboardComp = <Gameboard clues={this.state.clues} currentRound={this.state.currentRound} />;
+    if (this.state.fetchComplete && this.state.sortedClues === true) {
+      gameboardComp = <Gameboard socket={this.state.socket} clues={this.state.roundClues} currentRound={this.state.currentRound ? this.state.currentRound : 'initial'} />;
     }
 
     return (
       <Jumbotron className="App">
         <Grid fluid>
-          <Row className="jeopardy-board">
+          <Row className="jeopardy-board no-gutters">
             {gameboardComp}
           </Row>
           <Row className="App-header">

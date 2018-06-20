@@ -18,63 +18,29 @@ class Gameboard extends Component {
       jeopardy: [],
       doubleJeopardy: [],
       finalJeopardy: [],
-      currentRound: this.props.currentRound,
-      currentBoard: {}
+      currentRound: '',
+      currentBoard: [],
+      socket: []
     }
+
   }
 
   componentDidMount() {
-    this.setState({clues: this.props.clues});
+    this.setState({
+      clues: this.props.clues,
+      socket: this.props.socket
+    }, () => {console.log(this.state.clues.jeopardy)});
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (!this.state.categories.length) {
-      this.selectCategories();
-    }
-
-    if (prevProps.currentRound !== this.props.currentRound) {
+    if (prevState.currentRound !== this.props.currentRound) {
       this.setState({ currentRound: this.props.currentRound }, () => {
         this.setBoardForRound(this.state.currentRound);
-
       });
     }
   }
 
-  selectCategories = () => {
-    if (this.state.clues) {
-      const categories = _.sampleSize(this.state.clues, 13);
-      const allJeopardy = categories.slice(0,6);
-      const allDoubleJeopardy = categories.slice(6,12);
-      const allFinalJeopardy = categories.slice(12);
-
-      const jeopardy = this.cleanUpCategories(allJeopardy);
-      const doubleJeopardy = this.cleanUpCategories(allDoubleJeopardy);
-      const finalJeopardy = this.cleanUpCategories(allFinalJeopardy, true);
-
-      this.setState({ categories, jeopardy, doubleJeopardy, finalJeopardy }, () => { this.setBoardForRound() });
-    }
-  }
-
-  cleanUpCategories = (categoryArrays, final = false) => {
-    // Take randomized categories, put them in one array, then sort into objects
-    const categoryArray = [].concat(...categoryArrays);
-    const categoryObject = _.groupBy(categoryArray, 'category');
-    let completed = {};
-
-    for (let property in categoryObject) {
-      completed[property] = _(categoryObject[property]).uniqBy('difficulty').sortBy('difficulty').value();
-      if (final === true) {
-        completed[property] = _.last(completed[property]);
-      }
-    }
-    return completed;
-  }
-
   buildBoard = (currentBoard) => {
-
-    // for (let key in currentBoard) {
-    //
-    // }
 
     const columns = Object.keys(currentBoard).map((keyName, keyIndex) => {
 
@@ -87,15 +53,16 @@ class Gameboard extends Component {
   }
 
   setBoardForRound = (currentRound) => {
+    console.log(currentRound);
     switch (currentRound) {
       case 'doubleJeopardy':
-        this.setState({ currentBoard: this.state.doubleJeopardy});
+        this.setState({ currentBoard: this.state.clues.doubleJeopardy}, () => {console.log(this.state.currentBoard)});
         break;
       case 'finalJeopardy':
-        this.setState({ currentBoard: this.state.finalJeopardy});
+        this.setState({ currentBoard: this.state.clues.finalJeopardy}, () => {console.log(this.state.currentBoard)});
         break;
       default:
-        this.setState({ currentBoard: this.state.jeopardy });
+        this.setState({ currentBoard: this.state.clues.jeopardy }, () => {console.log(this.state.currentBoard)});
     }
   }
 
@@ -105,7 +72,7 @@ class Gameboard extends Component {
       column = this.buildBoard(this.state.currentBoard);
     }
     return (
-      <Row className='show-grid'>{column}</Row>
+      <Row className='no-gutters'>{column}</Row>
     );
   }
 }

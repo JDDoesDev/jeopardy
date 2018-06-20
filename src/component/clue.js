@@ -14,7 +14,7 @@ const customStyles = {
   content : {
     top                   : '0',
     left                  : '0',
-    right                 : 'auto',
+    right                 : '0',
     bottom                : '0'
   }
 };
@@ -49,23 +49,27 @@ class Clue extends Component {
   render() {
     const { item, multiplier, round } = this.props;
     let title;
+    let classes = 'clue-item';
     if (round) {
-      title = item.category;
+      classes = 'final-item';
+      title = <Col sm={12} className="category-row final-clue"><span onClick={this.openModal}>{entities.decodeHTML(item.category)}</span></Col>;
     } else {
-      title = '$' + (item.difficulty * multiplier);
+      let value = '$' + (item.difficulty * multiplier);
+      title = <h1 onClick={this.openModal}>{value}</h1>;
     }
     return (
-      <Col sm={12}>
-        <h1 onClick={this.openModal}>{entities.decodeHTML(title)}</h1>
+      <Col sm={12} className={classes}>
+        {title}
         <Modal
           isOpen={this.state.modalIsOpen}
           onAfterOpen={this.afterOpenModal}
           onRequestClose={this.closeModal}
-          style={customStyles}
+          className="clue-modal"
+          overlayClassName="clue-overlay"
           contentLabel="Open Clue"
         >
-        <button onClick={this.closeModal}>X</button>
         {item.clue}
+        <button onClick={this.closeModal}>Close</button>
         </Modal>
       </Col>
     );

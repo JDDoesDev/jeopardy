@@ -7,10 +7,11 @@ const GameboardColumn = (props) => {
 
   let multiplier = 200;
   let columnItems;
+
   if (props.round === 'doubleJeopardy') {
     multiplier = 400;
   }
-  console.log(props.currentColumn);
+
   if (props.round !== 'finalJeopardy' && props.currentColumn.length) {
     columnItems = props.currentColumn.map((item) => {
       return (
@@ -23,11 +24,9 @@ const GameboardColumn = (props) => {
     );
   }
 
-
-
   return (
-    <Col className='show-grid' md={2}>
-      <Col sm={12} className="category-row"><h3>{entities.decodeHTML(props.keyName)}</h3></Col>
+    <Col className='' md={2}>
+      <Col sm={12} className="category-row">{entities.decodeHTML(props.keyName)}</Col>
       {columnItems}
     </Col>
   );
