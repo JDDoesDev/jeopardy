@@ -25,7 +25,7 @@ class App extends Component {
 
     this.state = {
       response: false,
-      endpoint: "http://127.0.0.1:4001",
+      endpoint: "http://localhost:4001",
       fetchComplete: false,
       rawClues: [],
       clues: [],
