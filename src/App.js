@@ -2,17 +2,18 @@ import React, { Component } from 'react';
 import {
   BrowserRouter as Router,
   Route,
-  Link
+  Link,
+  Redirect
 } from 'react-router-dom';
-import { Grid, Row, Col, Button, Jumbotron } from 'react-bootstrap';
 import socketIOClient from "socket.io-client";
 import 'whatwg-fetch';
 import _ from 'lodash';
 
-import logo from './logo.svg';
 import './App.css';
 import './scss/custom.scss';
-import Gameboard from './component/gameboard';
+
+import GameScreen from './component/game_screen';
+import HostScreen from './component/host_screen';
 
 
 const URL = 'http://drupaljeopardy.lndo.site/v1/jeopardy/clues';
@@ -33,8 +34,23 @@ class App extends Component {
       finalJeopardy: [],
       currentRound: '',
       socket: [],
-      sortedClues: false
+      sortedClues: false,
+      baseUrl: true,
+      loadingComplete: false,
+      mainDisplay: false,
+      gameStarted: false,
+      gameDisplay: false
     };
+
+  }
+
+  componentDidMount() {
+    const { endpoint } = this.state;
+
+    this.redirected = false;
+
+    this.socket = socketIOClient(endpoint);
+    this.setState({ socket: this.socket });
 
     if (URL) {
       fetch(URL, {
@@ -49,16 +65,18 @@ class App extends Component {
       })
       .then(() => {
         this.formatClues(this.state.rawData);
+
         this.setState({fetchComplete: true})
       });
     }
-  }
 
-  componentDidMount() {
-    const { endpoint } = this.state;
-
-    this.socket = socketIOClient(endpoint);
-    this.setState({ socket: this.socket });
+    if (this.socket) {
+      this.socket.on('host', (data) => {
+        if (data === 'selected') {
+          this.setState({ gameStarted: true, gameDisplay: true });
+        }
+      });
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
@@ -98,41 +116,81 @@ class App extends Component {
       const doubleJeopardy = this.cleanUpCategories(allDoubleJeopardy);
       const finalJeopardy = this.cleanUpCategories(allFinalJeopardy, true);
 
-      this.setState({ roundClues: { jeopardy, doubleJeopardy, finalJeopardy }, sortedClues: true }, () => {
-        this.state.socket.emit('inner', this.state.clues);
-      });
+      this.setState({ roundClues: { jeopardy, doubleJeopardy, finalJeopardy }, sortedClues: true });
     }
   }
 
-  testEmitter = () => {
-    // sending sockets
-    this.setState({welcome: 'welcome to something else'});
+  toggleMenu = (e) => {
+    const targetScreen = e.target.id;
+    if (targetScreen === 'host') {
+      this.setState({ mainDisplay: true, gameStarted: true, baseUrl: false }, () => { this.socket.emit('host', 'selected');});
+    }
+    if (targetScreen === 'game') {
+      this.setState({ gameStarted: true, baseUrl: false });
+    }
   }
 
-  handleRoundClick = (e) => {
-    const round = e.target.id;
-    this.setState({ currentRound : round});
+  checkIfLoading = () => {
+    if (this.state.fetchComplete) {
+      return true;
+    }
+    return false;
   }
 
-  render() {
-    let gameboardComp = 'Loading clues...';
-    if (this.state.fetchComplete && this.state.sortedClues === true) {
-      gameboardComp = <Gameboard socket={this.state.socket} clues={this.state.roundClues} currentRound={this.state.currentRound ? this.state.currentRound : 'initial'} />;
+  buildMenu = () => {
+    let menu =
+      <div>
+        <button onClick={this.toggleMenu}>
+          <Link id="host" to="/host">Start Game</Link>
+        </button>
+        <button onClick={this.toggleMenu}>
+          <Link id="game" to="/game">Game Screen</Link>
+        </button>
+      </div>
+
+
+    if (this.state.gameStarted && window.location.pathname !== '/') {
+      menu = '';
     }
 
     return (
-      <Jumbotron className="App">
-        <Grid fluid>
-          <Row className="jeopardy-board no-gutters">
-            {gameboardComp}
-          </Row>
-          <Row className="App-header">
-            <Button id="jeopardy"onClick={this.handleRoundClick}>Start</Button>
-            <Button id="doubleJeopardy"onClick={this.handleRoundClick}>Double</Button>
-            <Button id="finalJeopardy"onClick={this.handleRoundClick}>Final</Button>
-          </Row>
-        </Grid>
-      </Jumbotron>
+      <div>
+        <Router>
+          <div>
+            { menu }
+            <Route
+              path="/host"
+              render={(props) => <HostScreen {...props} socket={this.socket} roundClues={this.state.roundClues} />}
+              />
+            <Route
+              path="/game"
+              render={(props) => <GameScreen {...props} socket={this.socket}  />}
+              />
+          </div>
+        </Router>
+      </div>
+    );
+  }
+
+
+
+
+  render() {
+    let menu;
+    if (!this.state.gameStarted && window.location.pathname !== '/') {
+      menu =
+        <Router>
+          <Redirect to="/" />
+        </Router>
+    }
+    if (this.checkIfLoading()) {
+      menu = this.buildMenu();
+    }
+
+    return (
+      <div>
+        {menu}
+      </div>
     );
   }
 }

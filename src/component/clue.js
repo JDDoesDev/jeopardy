@@ -1,23 +1,8 @@
 import React, { Component } from 'react';
-import {
-  BrowserRouter as Router,
-  Route,
-  Link
-} from 'react-router-dom';
-import socketIOClient from "socket.io-client";
-import _ from 'lodash';
-import Modal from 'react-modal';
-import { Grid, Row, Col } from 'react-bootstrap';
-import entities from 'entities';
 
-const customStyles = {
-  content : {
-    top                   : '0',
-    left                  : '0',
-    right                 : '0',
-    bottom                : '0'
-  }
-};
+import Modal from 'react-modal';
+import { Col } from 'react-bootstrap';
+import entities from 'entities';
 
 // Make sure to bind modal to your appElement (http://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#root');
@@ -28,13 +13,39 @@ class Clue extends Component {
     super(props);
 
     this.state = {
-      modalIsOpen: false
+      modalIsOpen: false,
+      screenType: '',
+      clueViewed: false
     };
   }
 
-  openModal = () => {
-    this.setState({modalIsOpen: true});
+  componentDidMount() {
+    const { item } = this.props;
+    this.socket = this.props.socket;
+    this.setState({screenType: this.props.screenType});
+    if (this.socket && this.props.screenType !== 'host') {
+
+      this.socket.on('view clue', (data) => {
+        if (item.nid === data.nid) {
+          if (data.toDo === 'open') {
+            this.setState({modalIsOpen: true, clueViewed: true});
+          } else {
+            this.setState({modalIsOpen: false});
+          }
+        }
+      });
+    }
   }
+
+  openModal = () => {
+    const { item } = this.props;
+    if (this.state.screenType === 'host') {
+      this.socket.emit('view clue', {'nid': item.nid, 'toDo': 'open'});
+    }
+
+    this.setState({modalIsOpen: true, clueViewed: true});
+  }
+
 
   afterOpenModal = () => {
     // references are now sync'd and can be accessed.
@@ -42,6 +53,10 @@ class Clue extends Component {
   }
 
   closeModal = () => {
+    const { item } = this.props;
+    if (this.state.screenType === 'host') {
+      this.socket.emit('view clue', {'nid': item.nid, 'toDo': 'close'});
+    }
     this.setState({modalIsOpen: false});
   }
 
@@ -50,25 +65,36 @@ class Clue extends Component {
     const { item, multiplier, round } = this.props;
     let title;
     let classes = 'clue-item';
+    let modalClasses = `clue-modal ${this.state.screenType}`;
+    let overlayClasses = `clue-overlay ${this.state.screenType}`;
     if (round) {
       classes = 'final-item';
       title = <Col sm={12} className="category-row final-clue"><span onClick={this.openModal}>{entities.decodeHTML(item.category)}</span></Col>;
     } else {
-      let value = '$' + (item.difficulty * multiplier);
-      title = <h1 onClick={this.openModal}>{value}</h1>;
+      let value = (item.difficulty * multiplier);
+      if (!this.state.clueViewed) {
+        let formattedValue = '$' + value;
+        title = <h1 onClick={() => {this.openModal(); this.props.onValueAvailable(value)}}>{formattedValue}</h1>;
+      } else {
+        title = <span></span>;
+      }
     }
     return (
-      <Col sm={12} className={classes}>
+      <Col xs={12} className={classes}>
         {title}
         <Modal
           isOpen={this.state.modalIsOpen}
           onAfterOpen={this.afterOpenModal}
           onRequestClose={this.closeModal}
-          className="clue-modal"
-          overlayClassName="clue-overlay"
+          className={modalClasses}
+          overlayClassName={overlayClasses}
           contentLabel="Open Clue"
         >
         {item.clue}
+        { (this.state.screenType === 'host') ?
+          <div className='answer'>{item.answer}</div> :
+          ''
+        }
         <button onClick={this.closeModal}>Close</button>
         </Modal>
       </Col>

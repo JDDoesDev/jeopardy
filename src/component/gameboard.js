@@ -1,9 +1,5 @@
 import React, { Component } from 'react';
-import { Grid, Row, Col } from 'react-bootstrap'
-
-import socketIOClient from "socket.io-client";
-import _ from 'lodash';
-
+import { Row } from 'react-bootstrap'
 
 import GameboardColumn from './gameboard_column';
 
@@ -26,14 +22,15 @@ class Gameboard extends Component {
   }
 
   componentDidMount() {
-    this.setState({
-      clues: this.props.clues,
-      socket: this.props.socket
-    }, () => {console.log(this.state.clues.jeopardy)});
+    this.socket = this.props.socket;
+    this.setState({clues: this.props.clues});
   }
 
   componentDidUpdate(prevProps, prevState) {
-    if (prevState.currentRound !== this.props.currentRound) {
+    if (prevState.clues !== this.props.clues) {
+      this.setState({ clues: this.props.clues });
+    }
+    if (prevProps.currentRound !== this.props.currentRound) {
       this.setState({ currentRound: this.props.currentRound }, () => {
         this.setBoardForRound(this.state.currentRound);
       });
@@ -41,11 +38,9 @@ class Gameboard extends Component {
   }
 
   buildBoard = (currentBoard) => {
-
     const columns = Object.keys(currentBoard).map((keyName, keyIndex) => {
-
       return (
-        <GameboardColumn key={keyIndex} currentColumn={currentBoard[keyName]} keyName={keyName} round={this.state.currentRound}/>
+        <GameboardColumn onValueAvailable={this.props.onValueAvailable} socket={this.socket} key={keyIndex} currentColumn={currentBoard[keyName]} keyName={keyName} round={this.state.currentRound} screenType={this.props.screenType}/>
       );
     });
 
@@ -53,22 +48,21 @@ class Gameboard extends Component {
   }
 
   setBoardForRound = (currentRound) => {
-    console.log(currentRound);
     switch (currentRound) {
       case 'doubleJeopardy':
-        this.setState({ currentBoard: this.state.clues.doubleJeopardy}, () => {console.log(this.state.currentBoard)});
+        this.setState({ currentBoard: this.state.clues.doubleJeopardy});
         break;
       case 'finalJeopardy':
-        this.setState({ currentBoard: this.state.clues.finalJeopardy}, () => {console.log(this.state.currentBoard)});
+        this.setState({ currentBoard: this.state.clues.finalJeopardy});
         break;
       default:
-        this.setState({ currentBoard: this.state.clues.jeopardy }, () => {console.log(this.state.currentBoard)});
+        this.setState({ currentBoard: this.state.clues.jeopardy });
     }
   }
 
   render() {
     let column;
-    if (Object.keys(this.state.currentBoard).length) {
+    if (this.state.currentBoard) {
       column = this.buildBoard(this.state.currentBoard);
     }
     return (

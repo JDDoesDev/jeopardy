@@ -62,6 +62,34 @@ $jeopardy-blue: #060CE9;
   }
 }
 
+.host-board {
+  .category-row, .clue-item {
+    @include vert-center;
+    font-size: 1em;
+    line-height: 1;
+    height: 6em;
+    border: 1px solid #000;
+    border-collapse: collapse;
+    padding: 0.5em;
+  }
+
+  .final-clue {
+    height: 3em;
+    font-size: 5em;
+  }
+
+  .clue-item {
+
+    h1 {
+      font-size: 2.5em;
+    }
+  }
+
+  .category-row {
+    letter-spacing: 2px;
+  }
+}
+
 .jumbotron {
   padding-top: 0;
 }
@@ -80,6 +108,12 @@ $jeopardy-blue: #060CE9;
   left: 0;
   right: 0;
   bottom: 0;
+
+  &.host {
+    background-color: #eaeaea;
+    font-family: 'Helvectica', sans-serif;
+    bottom:50%;
+  }
 }
 
 .clue-modal {
@@ -90,6 +124,17 @@ $jeopardy-blue: #060CE9;
   text-shadow: 10px 10px 18px #000;
   line-height: 1.1;
   letter-spacing: -1px;
+
+  &.host {
+    text-shadow: none;
+    color: black;
+    font-size: 3em;
+
+    .answer {
+      padding: 1em;
+      font-size: 0.5em;
+    }
+  }
 
   &:focus {
     outline: none;

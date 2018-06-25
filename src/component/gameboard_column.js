@@ -1,7 +1,7 @@
 import React from 'react';
 import entities from 'entities';
 import Clue from './clue';
-import { Grid, Row, Col } from 'react-bootstrap';
+import { Col } from 'react-bootstrap';
 
 const GameboardColumn = (props) => {
 
@@ -15,17 +15,17 @@ const GameboardColumn = (props) => {
   if (props.round !== 'finalJeopardy' && props.currentColumn.length) {
     columnItems = props.currentColumn.map((item) => {
       return (
-        <Clue key={item.nid} item={item} multiplier={multiplier} />
+        <Clue onValueAvailable={props.onValueAvailable} key={item.nid} item={item} multiplier={multiplier} socket={props.socket} screenType={props.screenType}/>
       );
     })
   } else {
     return (
-      <Clue key={props.currentColumn.nid} item={props.currentColumn} round={props.round} />
+      <Clue key={props.currentColumn.nid} item={props.currentColumn} round={props.round} socket={props.socket} screenType={props.screenType}/>
     );
   }
 
   return (
-    <Col className='' md={2}>
+    <Col className='' xs={2}>
       <Col sm={12} className="category-row">{entities.decodeHTML(props.keyName)}</Col>
       {columnItems}
     </Col>
