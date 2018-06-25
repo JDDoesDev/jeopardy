@@ -39,9 +39,19 @@ class App extends Component {
       loadingComplete: false,
       mainDisplay: false,
       gameStarted: false,
-      gameDisplay: false
+      gameDisplay: false,
+      roomHash: '',
+      enteredHash: ''
     };
+  }
 
+  randomString = (length) => {
+    let text = "";
+    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    for(let i = 0; i < length; i++) {
+        text += possible.charAt(Math.floor(Math.random() * possible.length));
+    }
+    return text;
   }
 
   componentDidMount() {
@@ -50,7 +60,8 @@ class App extends Component {
     this.redirected = false;
 
     this.socket = socketIOClient(endpoint);
-    this.setState({ socket: this.socket });
+
+    this.setState({ socket: this.socket, roomHash: this.randomString(7) });
 
     if (URL) {
       fetch(URL, {
@@ -123,10 +134,14 @@ class App extends Component {
   toggleMenu = (e) => {
     const targetScreen = e.target.id;
     if (targetScreen === 'host') {
-      this.setState({ mainDisplay: true, gameStarted: true, baseUrl: false }, () => { this.socket.emit('host', 'selected');});
+      this.setState({ mainDisplay: true, gameStarted: true, baseUrl: false }, () => {
+        this.socket.emit('host', 'selected');
+        this.socket.emit('room', this.state.roomHash);
+      });
     }
     if (targetScreen === 'game') {
       this.setState({ gameStarted: true, baseUrl: false });
+      this.socket.emit('room', this.state.roomHash);
     }
   }
 
@@ -143,9 +158,15 @@ class App extends Component {
         <button onClick={this.toggleMenu}>
           <Link id="host" to="/host">Start Game</Link>
         </button>
+        <div>
+          <input
+            value={ this.state.roomHash }
+            onChange={event => this.setState({ roomHash: event.target.value }, () => console.log(this.state.roomHash))} />
+        </div>
         <button onClick={this.toggleMenu}>
-          <Link id="game" to="/game">Game Screen</Link>
+          <Link id="game" to="/game">Join Game</Link>
         </button>
+
       </div>
 
 
@@ -160,11 +181,11 @@ class App extends Component {
             { menu }
             <Route
               path="/host"
-              render={(props) => <HostScreen {...props} socket={this.socket} roundClues={this.state.roundClues} />}
+              render={(props) => <HostScreen {...props} socket={this.socket} roundClues={this.state.roundClues} roomHash={this.state.roomHash} />}
               />
             <Route
               path="/game"
-              render={(props) => <GameScreen {...props} socket={this.socket}  />}
+              render={(props) => <GameScreen {...props} socket={this.socket} onRoomSelect={(hash) => this.setState({roomHash: hash})} />}
               />
           </div>
         </Router>

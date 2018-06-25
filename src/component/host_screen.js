@@ -19,7 +19,8 @@ class HostScreen extends Component {
       roundClues: [],
       sortedClues: false,
       screenType: 'host',
-      currentValue:''
+      currentValue:'',
+      room: ''
     };
   }
 
@@ -57,6 +58,7 @@ class HostScreen extends Component {
             <Button id="doubleJeopardy" onClick={this.handleRoundClick}>Double</Button>
             <Button id="finalJeopardy" onClick={this.handleRoundClick}>Final</Button>
           </Row>
+          <div>Current Game ID: {this.props.roomHash}</div>
           { teams }
         </Grid>
     );

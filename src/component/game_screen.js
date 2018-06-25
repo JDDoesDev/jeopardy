@@ -16,7 +16,8 @@ class GameScreen extends Component {
       rawClues: [],
       roundClues: [],
       currentRound: '',
-      socketOpen: false
+      socketOpen: false,
+      roomHash: ''
     };
   }
 
