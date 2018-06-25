@@ -16,7 +16,7 @@ import GameScreen from './component/game_screen';
 import HostScreen from './component/host_screen';
 
 
-const URL = 'http://drupaljeopardy.lndo.site/v1/jeopardy/clues';
+const URL = process.env.REACT_APP_REST_URL;
 
 class App extends Component {
 
@@ -25,7 +25,7 @@ class App extends Component {
 
     this.state = {
       response: false,
-      endpoint: "http://localhost:4001",
+      endpoint: process.env.REACT_APP_SOCKET_URL,
       fetchComplete: false,
       rawClues: [],
       clues: [],
