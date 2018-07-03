@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 
 import Modal from 'react-modal';
-import { Col } from 'react-bootstrap';
+import { Col, Button } from 'react-bootstrap';
 import entities from 'entities';
 
 // Make sure to bind modal to your appElement (http://reactcommunity.org/react-modal/accessibility/)
@@ -15,16 +15,29 @@ class Clue extends Component {
     this.state = {
       modalIsOpen: false,
       screenType: '',
-      clueViewed: false
+      clueViewed: false,
+      clueDisplay: '',
+      pointValue: '',
+      modalContent: '',
+      daily: false,
+      showDaily: false,
+      clueAnswer: '',
+      clueText: ''
     };
   }
 
   componentDidMount() {
-    const { item } = this.props;
+    const { item, screenType, multiplier } = this.props;
     this.socket = this.props.socket;
-    this.setState({screenType: this.props.screenType});
-    if (this.socket && this.props.screenType !== 'host') {
+    this.setState({
+      screenType: screenType,
+      pointValue: item.difficulty * multiplier,
+      daily: item.daily ? true : false,
+      clueAnswer: item.answer,
+      clueText: item.clue
+    });
 
+    if (this.socket && screenType !== 'host') {
       this.socket.on('view clue', (data) => {
         if (item.nid === data.nid) {
           if (data.toDo === 'open') {
@@ -32,6 +45,11 @@ class Clue extends Component {
           } else {
             this.setState({modalIsOpen: false});
           }
+        }
+      });
+      this.socket.on('show daily', (data) => {
+        if (this.state.daily === true && this.state.showDaily === false) {
+          this.setState({showDaily: true});
         }
       });
     }
@@ -42,14 +60,18 @@ class Clue extends Component {
     if (this.state.screenType === 'host') {
       this.socket.emit('view clue', {'nid': item.nid, 'toDo': 'open'});
     }
-
     this.setState({modalIsOpen: true, clueViewed: true});
   }
 
+  handleTitleClick = () => {
+    if (this.state.screenType === 'host') {
+      this.openModal();
+      this.props.onValueAvailable(this.state.pointValue);
+    }
+  }
 
   afterOpenModal = () => {
-    // references are now sync'd and can be accessed.
-    // this.subtitle.style.color = '#f00';
+
   }
 
   closeModal = () => {
@@ -60,43 +82,87 @@ class Clue extends Component {
     this.setState({modalIsOpen: false});
   }
 
+  getModalDisplay = () => {
+    const modalClasses = `clue-modal ${this.state.screenType}`;
+    const overlayClasses = `clue-overlay ${this.state.screenType}`;
+
+    const display = () => {
+      if (this.state.daily === true && this.state.screenType !== 'host' && this.state.showDaily === false) {
+        return (
+          <div className='daily-card'>
+            DRUPAL DOUBLE!
+          </div>
+        )
+      }
+      return this.state.clueText;
+    }
+    let answer = '';
+    let button = '';
+    let doubleCover = '';
+    let wagerField = '';
+    let wagerSubmit = '';
+
+    if (this.state.screenType === 'host') {
+      answer = <div className='answer'>{this.state.clueAnswer}</div>;
+      button = <Button onClick={this.closeModal}>Close</Button>;
+      if (this.state.daily) {
+        wagerField = <input
+          value={ this.state.pointValue }
+          placeholder='Enter Wager'
+          onChange={(e) => this.setState({ pointValue: e.target.value })} />
+        wagerSubmit = <Button onClick={ this.handleWagerSubmit }>
+                        Submit Wager
+                      </Button>
+      }
+    }
+    return (
+      <Modal
+        isOpen={this.state.modalIsOpen}
+        onAfterOpen={this.afterOpenModal}
+        onRequestClose={this.closeModal}
+        className={modalClasses}
+        overlayClassName={overlayClasses}
+        contentLabel="Open Clue"
+      >
+        {display()}
+        {answer}
+        {button}
+        {doubleCover}
+        {wagerField}
+        {wagerSubmit}
+      </Modal>
+    );
+  }
+
+  handleWagerSubmit = () => {
+    this.props.onValueAvailable(this.state.pointValue);
+    this.socket.emit('show daily', true);
+  }
 
   render() {
     const { item, multiplier, round } = this.props;
     let title;
     let classes = 'clue-item';
-    let modalClasses = `clue-modal ${this.state.screenType}`;
-    let overlayClasses = `clue-overlay ${this.state.screenType}`;
+
     if (round) {
       classes = 'final-item';
       title = <Col sm={12} className="category-row final-clue"><span onClick={this.openModal}>{entities.decodeHTML(item.category)}</span></Col>;
     } else {
       let value = (item.difficulty * multiplier);
       if (!this.state.clueViewed) {
-        let formattedValue = '$' + value;
-        title = <h1 onClick={() => {this.openModal(); this.props.onValueAvailable(value)}}>{formattedValue}</h1>;
+        let formattedValue = '$' + this.state.pointValue;
+        title = <h1 onClick={() => {this.handleTitleClick(value)}}>{formattedValue}</h1>;
       } else {
         title = <span></span>;
       }
     }
+    const clue = this.getModalDisplay();
+
+
     return (
       <Col xs={12} className={classes}>
         {title}
-        <Modal
-          isOpen={this.state.modalIsOpen}
-          onAfterOpen={this.afterOpenModal}
-          onRequestClose={this.closeModal}
-          className={modalClasses}
-          overlayClassName={overlayClasses}
-          contentLabel="Open Clue"
-        >
-        {item.clue}
-        { (this.state.screenType === 'host') ?
-          <div className='answer'>{item.answer}</div> :
-          ''
-        }
-        <button onClick={this.closeModal}>Close</button>
-        </Modal>
+        {clue}
       </Col>
     );
   }

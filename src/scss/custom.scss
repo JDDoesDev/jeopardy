@@ -1,5 +1,9 @@
 $jeopardy-blue: #060CE9;
 
+html {
+  background-color: $jeopardy-blue;
+  color: white;
+}
 @font-face {
     font-family: Korinna;
     src: url("../font/Korinna-Regular.otf") format("opentype");
@@ -92,6 +96,7 @@ $jeopardy-blue: #060CE9;
 
 .jumbotron {
   padding-top: 0;
+  background-color: $jeopardy-blue;
 }
 
 .container-fluid {
@@ -140,11 +145,47 @@ $jeopardy-blue: #060CE9;
     outline: none;
   }
 
-  button {
-    position: fixed;
-    top: 10px;
-    left: 10px;
-    font-size: 2rem;
-    color: black;
+  // button {
+  //   position: fixed;
+  //   top: 10px;
+  //   left: 10px;
+  //   font-size: 2rem;
+  //   color: black;
+  // }
+}
+
+.flex-row {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.flex-row > [class*='col-'] {
+  display: flex;
+  flex-direction: column;
+  float: none;
+}
+.flex-row.row:after,
+.flex-row.row:before {
+  display: flex;
+}
+
+.gameboard-team-item {
+  color: white;
+  font-family: sans-serif;
+  text-transform: uppercase;
+  padding: 2rem;
+  font-size: 2.5em;
+  text-shadow: 2px 2px #333;
+
+  .negative {
+    color: #c60000
   }
+
+  .score::before {
+    content: '$';
+  }
+}
+
+.game-board-teams {
+  margin: 0;
 }

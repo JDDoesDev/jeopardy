@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Grid, Row, Button, Col } from 'react-bootstrap';
+import { Row, Button, Col } from 'react-bootstrap';
 
 import Team from './team';
 
@@ -21,10 +21,10 @@ class Teams extends Component {
   }
 
   componentDidMount() {
+    this.setState({screenType: this.props.screenType});
     if (this.props.screenType !== 'host') {
       this.setState({showInput: false})
     }
-    this.setState({ screenType: this.props.screenType, currentValue: this.props.currentValue}, () => console.log(this.state.currentValue));
     this.socket = this.props.socket;
     if (this.socket && this.props.screenType !== 'host') {
       this.socket.on('teams', (data) => {
@@ -33,12 +33,16 @@ class Teams extends Component {
         }
       });
     }
+    if (this.socket && this.props.screenType === 'host') {
+      this.socket.on('get teams', (d) => {
+        this.sendTeamInfo();
+      })
+    }
   }
 
   componentDidUpdate(prevProps, prevState) {
-    console.log(this.props.currentValue, prevState.currentValue);
     if (this.props.currentValue !== prevState.currentValue) {
-      this.setState({currentValue: this.props.currentValue}, () => {console.log(this.state.currentValue)})
+      this.setState({currentValue: this.props.currentValue});
     }
   }
 
@@ -80,7 +84,9 @@ class Teams extends Component {
   }
 
   finishTeams = () => {
+    let teamArray = this.state.teams;
     this.setState({showInput: false});
+    this.setState({teams : teamArray}, () => this.sendTeamInfo());
   }
 
   addMoney = (key, val) => {
@@ -104,7 +110,7 @@ class Teams extends Component {
             <input
               value={ this.state.currentTeam }
               onChange={event => this.setState({ currentTeam: event.target.value })} />
-            <Button onClick={() => {this.addTeam();}}>Add Team</Button>
+            <Button disabled={ !this.state.currentTeam } onClick={() => {this.addTeam();}}>Add Team</Button>
             <Button onClick={() => {this.finishTeams();}}>Finished</Button>
           </Row>
         );
@@ -114,7 +120,7 @@ class Teams extends Component {
     return (
       <Row>
         { inputs }
-        <Row>
+        <Row className='flex-row'>
           {teams}
         </Row>
       </Row>

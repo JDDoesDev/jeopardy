@@ -5,15 +5,24 @@ import {
   Link,
   Redirect
 } from 'react-router-dom';
+import {
+  BrowserView,
+  MobileView,
+  isBrowser,
+  isMobile
+} from "react-device-detect";
 import socketIOClient from "socket.io-client";
 import 'whatwg-fetch';
 import _ from 'lodash';
+import { Grid, Row, Button } from 'react-bootstrap';
 
 import './App.css';
 import './scss/custom.scss';
 
 import GameScreen from './component/game_screen';
 import HostScreen from './component/host_screen';
+import MobileScreen from './component/mobile_screen';
+import LoadingScreen from './component/loading';
 
 
 const URL = process.env.REACT_APP_REST_URL;
@@ -25,7 +34,7 @@ class App extends Component {
 
     this.state = {
       response: false,
-      endpoint: process.env.REACT_APP_SOCKET_URL,
+      endpoint: (!isMobile) ? process.env.REACT_APP_SOCKET_URL : 'http://10.0.0.33:4001',
       fetchComplete: false,
       rawClues: [],
       clues: [],
@@ -41,7 +50,10 @@ class App extends Component {
       gameStarted: false,
       gameDisplay: false,
       roomHash: '',
-      enteredHash: ''
+      enteredHash: '',
+      gameValue: '',
+      showHashField: false,
+      teams: []
     };
   }
 
@@ -56,6 +68,9 @@ class App extends Component {
 
   componentDidMount() {
     const { endpoint } = this.state;
+    if (isMobile) {
+      this.setState({ showHashField: true, loadingComplete: true});
+    }
 
     this.redirected = false;
 
@@ -63,7 +78,7 @@ class App extends Component {
 
     this.setState({ socket: this.socket, roomHash: this.randomString(7) });
 
-    if (URL) {
+    if (URL && !isMobile) {
       fetch(URL, {
         method: 'GET',
         credentials: 'same-origin'
@@ -76,7 +91,6 @@ class App extends Component {
       })
       .then(() => {
         this.formatClues(this.state.rawData);
-
         this.setState({fetchComplete: true})
       });
     }
@@ -87,12 +101,22 @@ class App extends Component {
           this.setState({ gameStarted: true, gameDisplay: true });
         }
       });
+      this.socket.on('teams', (data) => {
+        this.setState({teams: data}, () => {console.log(this.state.teams)});
+      })
     }
+  }
+
+  componentWillUnmount() {
+    this.socket.close();
   }
 
   componentDidUpdate(prevProps, prevState) {
     if (prevState.fetchComplete !== this.state.fetchComplete) {
       this.selectCategories();
+    }
+    if (this.checkIfLoading() && this.state.loadingComplete !== true) {
+      this.setState({ loadingComplete: true })
     }
   }
 
@@ -101,14 +125,32 @@ class App extends Component {
     this.setState({clues});
   }
 
-  cleanUpCategories = (categoryArrays, final = false) => {
+  cleanUpCategories = (categoryArrays, roundNumber, final = false) => {
     // Take randomized categories, put them in one array, then sort into objects
     const categoryArray = [].concat(...categoryArrays);
-    const categoryObject = _.groupBy(categoryArray, 'category');
+    const uniquedArray = _.uniqBy(categoryArray, v => [v.category, v.difficulty].join());
+    console.log(uniquedArray);
+
+    const doubles = _.sampleSize(uniquedArray, roundNumber);
+// eslint-disable-next-line
+    doubles.map((val, key) => {
+      const index = _.findIndex(uniquedArray, {'nid' : doubles[key].nid })
+
+      uniquedArray.map((v,k) => {
+        let clueObject = v;
+        if (k === index) {
+          clueObject.daily = '1';
+        }
+        return clueObject;
+      })
+    });
+
+
+    const categoryObject = _.groupBy(uniquedArray, 'category');
     let completed = {};
 
     for (let property in categoryObject) {
-      completed[property] = _(categoryObject[property]).uniqBy('difficulty').sortBy('difficulty').value();
+      completed[property] = _(categoryObject[property]).sortBy('difficulty').value();
       if (final === true) {
         completed[property] = _.last(completed[property]);
       }
@@ -123,9 +165,9 @@ class App extends Component {
       const allDoubleJeopardy = categories.slice(6,12);
       const allFinalJeopardy = categories.slice(12);
 
-      const jeopardy = this.cleanUpCategories(allJeopardy);
-      const doubleJeopardy = this.cleanUpCategories(allDoubleJeopardy);
-      const finalJeopardy = this.cleanUpCategories(allFinalJeopardy, true);
+      const jeopardy = this.cleanUpCategories(allJeopardy, '1');
+      const doubleJeopardy = this.cleanUpCategories(allDoubleJeopardy, '2');
+      const finalJeopardy = this.cleanUpCategories(allFinalJeopardy, '0', true);
 
       this.setState({ roundClues: { jeopardy, doubleJeopardy, finalJeopardy }, sortedClues: true });
     }
@@ -139,9 +181,12 @@ class App extends Component {
         this.socket.emit('room', this.state.roomHash);
       });
     }
-    if (targetScreen === 'game') {
-      this.setState({ gameStarted: true, baseUrl: false });
-      this.socket.emit('room', this.state.roomHash);
+    if (targetScreen === 'game' || targetScreen === 'mobile') {
+      this.setState({ gameStarted: true,
+        baseUrl: false,
+        roomHash: this.state.gameValue },
+        () => this.socket.emit('room', this.state.roomHash)
+      );
     }
   }
 
@@ -152,65 +197,101 @@ class App extends Component {
     return false;
   }
 
+  selectRoom = () => {
+    return (
+      <Row>
+        { this.state.showHashField ?
+          <div>
+            <input
+              value={ this.state.gameValue }
+              placeholder='Enter Game ID'
+              onChange={event => this.setState({ gameValue: event.target.value })} />
+          </div> :
+          null
+        }
+      </Row>
+    );
+  }
+
+  handleJoinClick = (e) => {
+    if (this.state.showHashField === false) {
+      this.setState({showHashField: true})
+    } else {
+      this.toggleMenu(e);
+    }
+  }
+
   buildMenu = () => {
     let menu =
-      <div>
-        <button onClick={this.toggleMenu}>
-          <Link id="host" to="/host">Start Game</Link>
-        </button>
-        <div>
-          <input
-            value={ this.state.roomHash }
-            onChange={event => this.setState({ roomHash: event.target.value }, () => console.log(this.state.roomHash))} />
-        </div>
-        <button onClick={this.toggleMenu}>
-          <Link id="game" to="/game">Join Game</Link>
-        </button>
-
-      </div>
-
-
-    if (this.state.gameStarted && window.location.pathname !== '/') {
-      menu = '';
-    }
+    <Grid>
+      {this.selectRoom()}
+      <BrowserView device={isBrowser}>
+        <Row>
+          { this.state.showHashField ?
+            null :
+            <Button onClick={ this.toggleMenu }>
+              <Link id="host" to="/host">Start Game</Link>
+            </Button>
+          }
+          <Button onClick={ this.handleJoinClick }>
+            { this.state.showHashField ?
+              <Link id="game" to="/game">Join Game</Link> :
+                <span>Join Game</span>
+              }
+            </Button>
+        </Row>
+      </BrowserView>
+      <MobileView device={isMobile}>
+        <Row>
+          <Button onClick={this.handleJoinClick}>
+            <Link id="mobile" to="/mobile">Join Game</Link>
+          </Button>
+        </Row>
+      </MobileView>
+    </Grid>
 
     return (
       <div>
         <Router>
           <div>
-            { menu }
+            <Route
+              exact path="/"
+              render={(props) => <LoadingScreen {...props} loaded={this.state.loadingComplete} menu={menu} />}
+              />
             <Route
               path="/host"
               render={(props) => <HostScreen {...props} socket={this.socket} roundClues={this.state.roundClues} roomHash={this.state.roomHash} />}
-              />
+            />
             <Route
               path="/game"
-              render={(props) => <GameScreen {...props} socket={this.socket} onRoomSelect={(hash) => this.setState({roomHash: hash})} />}
-              />
+              render={(props) => <GameScreen {...props} socket={this.socket}  />}
+            />
+            <Route
+              path="/mobile"
+              render={(props) => <MobileScreen {...props} socket={this.socket} teams={ this.state.teams } />}
+            />
           </div>
         </Router>
       </div>
     );
   }
 
-
-
-
   render() {
-    let menu;
-    if (!this.state.gameStarted && window.location.pathname !== '/') {
-      menu =
+    let initialScreen = this.buildMenu();
+    if (!this.state.gameStarted && (window.location.pathname !== '/') && !isMobile) {
+      return (
         <Router>
           <Redirect to="/" />
         </Router>
-    }
-    if (this.checkIfLoading()) {
-      menu = this.buildMenu();
+      );
     }
 
     return (
       <div>
-        {menu}
+
+          {initialScreen}
+
+
       </div>
     );
   }

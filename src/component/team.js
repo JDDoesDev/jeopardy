@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import { Col, Row} from 'react-bootstrap';
+import { Col } from 'react-bootstrap';
 
 class Team extends Component {
   constructor(props) {
@@ -17,15 +17,26 @@ class Team extends Component {
     this.setState({name: this.props.name, score: this.props.score, id: this.props.id});
   }
 
+  componentDidUpdate(prevProps) {
+    // Typical usage (don't forget to compare props):
+    if (this.props.score !== prevProps.score) {
+      this.setState({score: this.props.score});
+    }
+  }
+
   render() {
+    let scoreClasses = 'score';
     if (!this.state.name) {
       return (<div>Loading Team</div>);
+    }
+    if (Number(this.state.score) < 0) {
+      scoreClasses = 'score negative';
     }
 
     return (
       <Col xs={12}>
         <div className="team-name">{this.props.name}</div>
-        <div className="score">{this.props.score}</div>
+        <div className={scoreClasses}>{this.props.score}</div>
       </Col>
     );
   }

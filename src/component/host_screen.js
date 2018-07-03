@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { Grid, Row, Button, Jumbotron} from 'react-bootstrap';
+import { Grid, Row, Button } from 'react-bootstrap';
 
 import Gameboard from './gameboard';
 import Teams from './teams';
@@ -41,7 +41,7 @@ class HostScreen extends Component {
     let teams;
 
     if (this.state.roundClues && Object.keys(this.state.roundClues).length) {
-      gameboardComp = <Gameboard onValueAvailable={(currentValue) => this.setState({ currentValue })} socket={this.socket} clues={this.state.roundClues} currentRound={this.state.currentRound ? this.state.currentRound : 'initial'} screenType={this.state.screenType}/>;
+      gameboardComp = <Gameboard onValueAvailable={(currentValue) => this.setState({ currentValue }, () => {console.log(this.state.currentValue)})} socket={this.socket} clues={this.state.roundClues} currentRound={this.state.currentRound ? this.state.currentRound : 'initial'} screenType={this.state.screenType}/>;
     }
 
     if (this.socket && Object.keys(this.socket).length) {

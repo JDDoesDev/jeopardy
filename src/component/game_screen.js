@@ -17,7 +17,8 @@ class GameScreen extends Component {
       roundClues: [],
       currentRound: '',
       socketOpen: false,
-      roomHash: ''
+      roomHash: '',
+      screenType: 'game'
     };
   }
 
@@ -25,7 +26,6 @@ class GameScreen extends Component {
     this.socket = this.props.socket;
     if (this.socket && Object.keys(this.socket).length) {
       this.setState({socketOpen: true});
-      console.log('listening');
       this.socket.on('round', (data) => this.setState({ currentRound : data }));
       this.socket.on('clues',
         (data) => {
