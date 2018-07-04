@@ -5,9 +5,10 @@ class TeamSelect extends Component {
   constructor(props) {
     super(props);
     this.state = {
-      value: 'none',
+      teamName: '',
       teamsList: [],
-      teams: []
+      teams: [],
+      playerName: ''
     }
   }
 
@@ -25,6 +26,7 @@ class TeamSelect extends Component {
     console.log(this.state.teams);
     if (this.state.teams.length) {
       const teams = this.state.teams.map((v, k) => {
+        console.log(v, k)
         return (
           <option key={k} value={k}>{v.name}</option>
         )
@@ -34,22 +36,37 @@ class TeamSelect extends Component {
     return null;
   }
 
-  handleChange = (e) => {
-    this.setState({value: e.target.value }, () => {
-      this.props.onTeamJoined(this.state.value)
+  handleTeamChange = (e) => {
+    this.setState({teamName: e.target.value }, () => {
+      this.props.onTeamJoined(this.state.teamName)
+    })
+  }
+
+  handlePlayerChange = (e) => {
+    this.setState({playerName: e.target.value }, () => {
+      this.props.onNameEntered(this.state.playerName)
     })
   }
 
   render() {
     const teams = this.buildOptions();
     return (
-      <FormGroup controlId="formControlsSelect">
-        <ControlLabel>Select your team:</ControlLabel>
-        <FormControl componentClass="select" placeholder="none">
-          <option value="none"> -- Select -- </option>
-          { teams }
-        </FormControl>
-      </FormGroup>
+      <form>
+        <FormGroup controlId="formControlsSelect">
+          <ControlLabel>Select your team:</ControlLabel>
+          <FormControl onChange={this.handleTeamChange} componentClass="select" placeholder="none">
+            <option value="none"> -- Select -- </option>
+            { teams }
+          </FormControl>
+          <ControlLabel>Player Name:</ControlLabel>
+          <FormControl
+            type="text"
+            value={this.state.playerName}
+            placeholder="Enter text"
+            onChange={this.handlePlayerChange}
+          />
+        </FormGroup>
+      </form>
     )
   }
 }

@@ -34,7 +34,7 @@ class App extends Component {
 
     this.state = {
       response: false,
-      endpoint: (!isMobile) ? process.env.REACT_APP_SOCKET_URL : 'http://10.0.0.33:4001',
+      endpoint: process.env.REACT_APP_SOCKET_URL,
       fetchComplete: false,
       rawClues: [],
       clues: [],
@@ -59,7 +59,7 @@ class App extends Component {
 
   randomString = (length) => {
     let text = "";
-    const possible = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+    const possible = "ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnopqrstuvwxyz0123456789";
     for(let i = 0; i < length; i++) {
         text += possible.charAt(Math.floor(Math.random() * possible.length));
     }
@@ -178,14 +178,25 @@ class App extends Component {
     if (targetScreen === 'host') {
       this.setState({ mainDisplay: true, gameStarted: true, baseUrl: false }, () => {
         this.socket.emit('host', 'selected');
-        this.socket.emit('room', this.state.roomHash);
+        this.socket.emit('room', this.state.roomHash, (data) => {
+          if (data === true) {
+            this.setState({joinedRoom: true})
+          }
+        });
+
       });
     }
     if (targetScreen === 'game' || targetScreen === 'mobile') {
       this.setState({ gameStarted: true,
         baseUrl: false,
         roomHash: this.state.gameValue },
-        () => this.socket.emit('room', this.state.roomHash)
+        () => {
+          this.socket.emit('room', this.state.roomHash, (data) => {
+            if (data === true) {
+              this.setState({joinedRoom: true})
+            }
+          });
+        }
       );
     }
   }
@@ -268,7 +279,7 @@ class App extends Component {
             />
             <Route
               path="/mobile"
-              render={(props) => <MobileScreen {...props} socket={this.socket} teams={ this.state.teams } />}
+              render={(props) => <MobileScreen {...props} socket={this.socket} teams={ this.state.teams } joinedRoom={ this.state.joinedRoom}/>}
             />
           </div>
         </Router>

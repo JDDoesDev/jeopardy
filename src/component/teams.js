@@ -26,7 +26,7 @@ class Teams extends Component {
       this.setState({showInput: false})
     }
     this.socket = this.props.socket;
-    if (this.socket && this.props.screenType !== 'host') {
+    if (this.socket) {
       this.socket.on('teams', (data) => {
         if (data !== this.state.teams) {
           this.setState({ teams: data });
@@ -34,8 +34,12 @@ class Teams extends Component {
       });
     }
     if (this.socket && this.props.screenType === 'host') {
-      this.socket.on('get teams', (d) => {
-        this.sendTeamInfo();
+      console.log(this.socket);
+      this.socket.on('team getter', (d) => {
+        if (d) {
+          console.log('sending teams because of get');
+          this.sendTeamInfo();
+        }
       })
     }
   }
@@ -48,7 +52,7 @@ class Teams extends Component {
 
   addTeam = () => {
     let teamArray = this.state.teams;
-    teamArray.push({name: this.state.currentTeam, score: 0});
+    teamArray.push({name: this.state.currentTeam, score: 0, players: {}});
     this.setState({ teams: teamArray, currentTeam: ''}, () => {
       this.sendTeamInfo();
     });
@@ -56,6 +60,7 @@ class Teams extends Component {
 
   sendTeamInfo = () => {
     if (this.state.screenType === 'host' && this.socket) {
+      console.log('sending teams')
       this.socket.emit('teams', this.state.teams);
     }
   }
@@ -72,9 +77,9 @@ class Teams extends Component {
         }
         return (
           <Col xs={3} key={k}>
-            <Team key={k} id={k} name={v.name} score={v.score} />
-            <Button bsStyle='success' onClick={() => this.addMoney(k, this.state.currentValue)}>Correct</Button>
-            <Button bsStyle='danger' onClick={() => this.takeMoney(k, this.state.currentValue)}>Wrong</Button>
+            <Team key={k} id={k} name={v.name} score={v.score} players={v.players} />
+            <Button bsStyle='success' onClick={() => this.correctAnswer(k, this.state.currentValue)}>Correct</Button>
+            <Button bsStyle='danger' onClick={() => this.wrongAnswer(k, this.state.currentValue)}>Wrong</Button>
           </Col>
         );
       });
@@ -89,13 +94,13 @@ class Teams extends Component {
     this.setState({teams : teamArray}, () => this.sendTeamInfo());
   }
 
-  addMoney = (key, val) => {
+  correctAnswer = (key, val) => {
     let teamArray = this.state.teams;
     teamArray[key].score += Number(val);
     this.setState({teams : teamArray}, () => this.sendTeamInfo());
   }
 
-  takeMoney = (key, val) => {
+  wrongAnswer = (key, val) => {
     let teamArray = this.state.teams;
     teamArray[key].score -= Number(val);
     this.setState({teams : teamArray}, () => this.sendTeamInfo());

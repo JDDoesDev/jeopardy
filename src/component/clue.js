@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 
 import Modal from 'react-modal';
-import { Col, Button } from 'react-bootstrap';
+import { Row, Col, Button } from 'react-bootstrap';
 import entities from 'entities';
+
+import BuzzingIn from './buzzing_in'
 
 // Make sure to bind modal to your appElement (http://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#root');
@@ -83,6 +85,7 @@ class Clue extends Component {
   }
 
   getModalDisplay = () => {
+
     const modalClasses = `clue-modal ${this.state.screenType}`;
     const overlayClasses = `clue-overlay ${this.state.screenType}`;
 
@@ -115,6 +118,32 @@ class Clue extends Component {
                       </Button>
       }
     }
+
+    const content = () => {
+      if (this.state.screenType === 'host') {
+        return (
+          <Row>
+            <Col xs={6}>
+              {display()}
+              {answer}
+              {button}
+              {wagerField}
+              {wagerSubmit}
+            </Col>
+            <Col xs={6}>
+              <BuzzingIn socket={this.socket} />
+            </Col>
+          </Row>
+        );
+      } else {
+        return (
+          <Col>
+            {display()}
+            {doubleCover}
+          </Col>
+        );
+      }
+    }
     return (
       <Modal
         isOpen={this.state.modalIsOpen}
@@ -124,12 +153,7 @@ class Clue extends Component {
         overlayClassName={overlayClasses}
         contentLabel="Open Clue"
       >
-        {display()}
-        {answer}
-        {button}
-        {doubleCover}
-        {wagerField}
-        {wagerSubmit}
+        { content() }
       </Modal>
     );
   }

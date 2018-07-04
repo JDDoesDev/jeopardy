@@ -112,12 +112,13 @@ html {
   top: 0;
   left: 0;
   right: 0;
-  bottom: 0;
+  bottom: 20%;
 
   &.host {
     background-color: #eaeaea;
     font-family: 'Helvectica', sans-serif;
     bottom:50%;
+    min-height: 500px;
   }
 }
 
@@ -133,7 +134,7 @@ html {
   &.host {
     text-shadow: none;
     color: black;
-    font-size: 3em;
+    font-size: 2em;
 
     .answer {
       padding: 1em;
@@ -188,4 +189,8 @@ html {
 
 .game-board-teams {
   margin: 0;
+}
+
+.buzzer-button {
+  cursor: pointer;
 }
