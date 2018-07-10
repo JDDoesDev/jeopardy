@@ -16,12 +16,15 @@ class Teams extends Component {
       showInput: true,
       screenType: '',
       socket: [],
-      currentValue: ''
+      currentValue: '',
+      currentRound: null,
+      finalResponses: [],
+      finalSubmitted: []
     }
   }
 
   componentDidMount() {
-    this.setState({screenType: this.props.screenType});
+    this.setState({screenType: this.props.screenType, currentRound: this.props.currentRound });
     if (this.props.screenType !== 'host') {
       this.setState({showInput: false})
     }
@@ -32,15 +35,33 @@ class Teams extends Component {
           this.setState({ teams: data });
         }
       });
+      this.socket.on('round', (data) => {
+        console.log('round received');
+        if (data !== this.state.currentRound) {
+          this.setState({ currentRound: data });
+        }
+      });
     }
     if (this.socket && this.props.screenType === 'host') {
-      console.log(this.socket);
-      this.socket.on('team getter', (d) => {
-        if (d) {
-          console.log('sending teams because of get');
+      this.socket.on('team getter', (data) => {
+        if (data) {
           this.sendTeamInfo();
         }
       })
+      this.socket.on('final wager', (data) => {
+        if (data) {
+          this.finalWagerSubmitted(data.teamId);
+        }
+      })
+      this.socket.on('final jeopardy', (data) => {
+        if (data) {
+          this.setState({ finalResponses: [...this.state.finalResponses, data]}, () => console.log(this.state.finalResponses))
+        }
+      })
+    }
+    if (this.socket && this.props.screenType !== 'host') {
+      console.log('getting the teams')
+      this.socket.emit('team getter', 'get some')
     }
   }
 
@@ -48,6 +69,16 @@ class Teams extends Component {
     if (this.props.currentValue !== prevState.currentValue) {
       this.setState({currentValue: this.props.currentValue});
     }
+    if (this.props.currentRound !== prevState.currentRound) {
+      this.setState({currentRound: this.props.currentRound});
+    }
+  }
+
+  finalWagerSubmitted = (key) => {
+    let teamArray = this.state.teams;
+    teamArray[key].finalWagerSubmitted = true;
+    console.log(teamArray);
+    this.setState({teams: teamArray}, () => console.log(this.state.teams));
   }
 
   addTeam = () => {
@@ -71,15 +102,26 @@ class Teams extends Component {
         if (this.state.screenType !== 'host') {
           return (
             <Col xs={3} className='gameboard-team-item' key={k}>
-              <Team id={k} name={v.name} score={v.score} />
+              <Team id={k} name={v.name} score={v.score} socket={this.socket} />
             </Col>
           );
         }
         return (
           <Col xs={3} key={k}>
-            <Team key={k} id={k} name={v.name} score={v.score} players={v.players} />
+            <Team key={k} id={k} name={v.name} score={v.score} players={v.players} finalWagerSubmitted={v.finalWagerSubmitted} />
             <Button bsStyle='success' onClick={() => this.correctAnswer(k, this.state.currentValue)}>Correct</Button>
             <Button bsStyle='danger' onClick={() => this.wrongAnswer(k, this.state.currentValue)}>Wrong</Button>
+            {(this.state.currentRound === 'finalJeopardy') ?
+            <Row>
+              <Col xs={12}>
+                <Button bsStyle='success' onClick={() => this.revealFinalAnswer(k, this.state.finalResponses)} block>Reveal Response</Button>
+              </Col>
+              <Col xs={12}>
+                <Button bsStyle='success' onClick={() => this.revealFinalWager(k, this.state.finalResponses)} block>Reveal Wager</Button>
+              </Col>
+            </Row>
+            : null
+            }
           </Col>
         );
       });
@@ -98,12 +140,35 @@ class Teams extends Component {
     let teamArray = this.state.teams;
     teamArray[key].score += Number(val);
     this.setState({teams : teamArray}, () => this.sendTeamInfo());
+    if (this.socket && Object.keys(this.socket).length) {
+      this.socket.emit('answered', [key, 'right']);
+    }
   }
 
   wrongAnswer = (key, val) => {
     let teamArray = this.state.teams;
     teamArray[key].score -= Number(val);
     this.setState({teams : teamArray}, () => this.sendTeamInfo());
+    if (this.socket && Object.keys(this.socket).length) {
+      this.socket.emit('answered', [key, 'wrong']);
+    }
+  }
+
+  revealFinalAnswer = (key, answers) => {
+    const getCurrentResponse = () => answers.find(val => (val.teamId === key));
+    let currentResponse = getCurrentResponse();
+    this.setState({ currentValue: currentResponse.wager});
+    currentResponse.currentTeam = this.state.teams[key].name
+    if (this.socket && Object.keys(this.socket).length) {
+      this.socket.emit('final answer', currentResponse)
+    }
+  }
+
+  revealFinalWager = (key, answers) => {
+    let teamArray = this.state.teams;
+    if (this.socket && Object.keys(this.socket).length) {
+      this.socket.emit('final wager reveal', true)
+    }
   }
 
   render() {

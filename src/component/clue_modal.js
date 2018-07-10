@@ -5,6 +5,7 @@ import { Row, Col, Button } from 'react-bootstrap';
 import entities from 'entities';
 
 import BuzzingIn from './buzzing_in'
+import ClueModal from './clue_modal'
 
 // Make sure to bind modal to your appElement (http://reactcommunity.org/react-modal/accessibility/)
 Modal.setAppElement('#root');
@@ -26,12 +27,7 @@ class Clue extends Component {
       clueAnswer: '',
       clueText: '',
       clueId: null,
-      round: null,
-      finalAnswer: null,
-      finalWager: null,
-      finalPlayerName: null,
-      finalReceived: false,
-      revealWager: false
+      round: null
     };
   }
 
@@ -63,19 +59,8 @@ class Clue extends Component {
           this.setState({showDaily: true});
         }
       });
-    }
-    if (this.socket) {
-      this.socket.on('final wager reveal', (data) => {
-        this.setState({revealFinalWager: true});
-      });
       this.socket.on('final answer', (data) => {
-        console.log(data)
-        this.setState({
-          finalAnswer: data.answer,
-          finalWager: data.wager,
-          finalPlayerName: data.playerName,
-          finalReceived: true
-        })
+
       });
     }
   }
@@ -114,7 +99,7 @@ class Clue extends Component {
   }
 
   getModalDisplay = () => {
-    console.log('displayModal')
+
     const modalClasses = `clue-modal ${this.state.screenType}`;
     const overlayClasses = `clue-overlay ${this.state.screenType}`;
 
@@ -125,16 +110,6 @@ class Clue extends Component {
             DRUPAL DOUBLE!
           </div>
         )
-      }
-
-      if (this.state.round === 'finalJeopardy' && this.state.finalReceived) {
-        return (
-          <div className='final-reveal'>
-            <span className='final-response'>{this.state.finalAnswer}</span>
-            <span className='final-responder'>{this.state.finalPlayerName}</span>
-            <span className='final-wager'>{this.state.revealFinalWager ? `$${this.state.finalWager}` : null}</span>
-          </div>
-        );
       }
 
       return this.state.clueText;
@@ -158,6 +133,7 @@ class Clue extends Component {
                       </Button>
       }
     }
+    console.log(this.state.round);
 
     const content = () => {
       if (this.state.screenType === 'host') {
@@ -226,7 +202,20 @@ class Clue extends Component {
     return (
       <Col xs={12} className={classes}>
         {title}
-        {clue}
+        <ClueModal
+          screenType={this.state.screenType}
+          daily={this.state.daily}
+          clueText={this.state.clueText}
+          clueAnswer={this.state.clueAnswer}
+          pointValue={this.state.pointValue}
+          onHandleWagerSubmit={this.handleWagerSubmit}
+          clueId={this.state.clueId}
+          modalIsOpen={this.state.modalIsOpen}
+          socket={this.socket}
+          onValueChange={(value) => this.setState({pointValue: value})}
+        />
+
+
       </Col>
     );
   }

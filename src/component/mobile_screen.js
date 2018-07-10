@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import { Row, Col, Button } from 'react-bootstrap';
 import TeamSelect from './teams_select';
 import Buzzer from './buzzer';
+import FinalScreen from './final_screen';
 
 class MobileScreen extends Component {
 
@@ -16,7 +17,8 @@ class MobileScreen extends Component {
       screenType: 'mobile',
       joinedRoom: false,
       playerName: null,
-      teamId: null
+      teamId: null,
+      currentRound: null
     };
   }
 
@@ -27,6 +29,11 @@ class MobileScreen extends Component {
       this.socket.on('teams', (data) => {
         if (this.state.teams !== data) {
           this.setState({teams: data});
+        }
+      })
+      this.socket.on('round', (data) => {
+        if (this.state.currentRound !== data) {
+          this.setState({currentRound: data});
         }
       })
     }
@@ -85,9 +92,11 @@ class MobileScreen extends Component {
             { this.state.playerName }
           </div>
         </Col>
-        <Col xs={12} className="buzzer-button-wrapper">
-          <Buzzer teamJoined={this.state.teamJoined} socket={this.socket} playerName={ this.state.playerName } teamId={ this.state.teamId } />
-        </Col>
+        {
+          (this.state.currentRound !== 'finalJeopardy') ?
+          <Buzzer teamJoined={this.state.teamJoined} socket={this.socket} playerName={ this.state.playerName } teamId={ this.state.teamId } /> :
+          <FinalScreen socket={this.socket} playerName={ this.state.playerName } teamId={ this.state.teamId } />
+        }
       </Row>
     );
   }

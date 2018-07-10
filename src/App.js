@@ -15,6 +15,7 @@ import socketIOClient from "socket.io-client";
 import 'whatwg-fetch';
 import _ from 'lodash';
 import { Grid, Row, Button } from 'react-bootstrap';
+import { hot } from 'react-hot-loader';
 
 import './App.css';
 import './scss/custom.scss';
@@ -230,6 +231,9 @@ class App extends Component {
     } else {
       this.toggleMenu(e);
     }
+    if (isMobile) {
+      this.setState({ gameStarted: true });
+    }
   }
 
   buildMenu = () => {
@@ -254,7 +258,7 @@ class App extends Component {
       </BrowserView>
       <MobileView device={isMobile}>
         <Row>
-          <Button onClick={this.handleJoinClick}>
+          <Button onClick={ this.handleJoinClick }>
             <Link id="mobile" to="/mobile">Join Game</Link>
           </Button>
         </Row>
@@ -289,7 +293,7 @@ class App extends Component {
 
   render() {
     let initialScreen = this.buildMenu();
-    if (!this.state.gameStarted && (window.location.pathname !== '/') && !isMobile) {
+    if (!this.state.gameStarted && (window.location.pathname !== '/')) {
       return (
         <Router>
           <Redirect to="/" />
@@ -299,13 +303,10 @@ class App extends Component {
 
     return (
       <div>
-
-          {initialScreen}
-
-
+        {initialScreen}
       </div>
     );
   }
 }
 
-export default App;
+export default hot(module)(App);

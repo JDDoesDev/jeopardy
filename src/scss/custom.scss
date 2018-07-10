@@ -194,3 +194,15 @@ html {
 .buzzer-button {
   cursor: pointer;
 }
+
+.answering {
+  background-color: #ffcc00;
+
+  &.right {
+    background-color: green;
+  }
+  &.wrong {
+    background-color: $jeopardy-blue;
+    opacity: .5;
+  }
+}

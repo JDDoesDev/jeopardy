@@ -45,7 +45,12 @@ class HostScreen extends Component {
     }
 
     if (this.socket && Object.keys(this.socket).length) {
-      teams = <Teams socket={this.socket} screenType={this.state.screenType} currentValue={this.state.currentValue}/>;
+      teams = <Teams
+        socket={this.socket}
+        screenType={this.state.screenType}
+        currentValue={this.state.currentValue}
+        currentRound={this.state.currentRound}
+      />;
     }
 
     return (

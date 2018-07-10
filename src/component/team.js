@@ -8,9 +8,10 @@ class Team extends Component {
     this.state = {
       name: '',
       score: '',
-      id: '',
+      id: null,
       players: [],
-      active: false
+      active: false,
+      finalWagerSubmitted: false
     };
   }
 
@@ -19,9 +20,22 @@ class Team extends Component {
     this.setState({name: this.props.name, score: this.props.score, id: this.props.id});
     if (this.socket && Object.keys(this.socket).length) {
       this.socket.on('firsties', (data) => {
-        console.log(data, this.state.id)
-        if (this.state.id === data) {
-          this.setState({active: true})
+        if (this.state.id === Number(data)) {
+          this.setState({active: 'answering'})
+        }
+      })
+      this.socket.on('answered', (data) => {
+        if (this.state.id === Number(data[0])) {
+          if (data[1] === 'right') {
+            this.setState({ active: 'answering right'}, () => {console.log(this.state.active)})
+          } else {
+            this.setState({ active: 'answering wrong'}, () => {console.log(this.state.active)})
+          }
+        }
+      })
+      this.socket.on('view clue', (data) => {
+        if (data.toDo === 'close') {
+          this.setState({ active: false })
         }
       })
     }
@@ -34,6 +48,9 @@ class Team extends Component {
     }
     if (this.props.players !== prevProps.players) {
       this.setState({ players: this.props.players });
+    }
+    if (this.props.finalWagerSubmitted !== prevProps.finalWagerSubmitted) {
+      this.setState({ finalWagerSubmitted: this.props.finalWagerSubmitted });
     }
   }
 
@@ -49,7 +66,7 @@ class Team extends Component {
 
   render() {
     let scoreClasses = 'score';
-    const active = this.state.active ? 'answering' : null;
+
     if (!this.state.name) {
       return (<div>Loading Team</div>);
     }
@@ -58,13 +75,20 @@ class Team extends Component {
     }
 
     return (
-      <Col xs={12} className={active}>
+      <Col xs={12} className={ this.state.active }>
         <div className="team-name ">{this.state.name}</div>
         <div className="players">
           <ul>
             { this.getPlayers() }
           </ul>
-        </div>
+          {
+            this.state.finalWagerSubmitted ?
+            <div>
+              Final Wager Submitted
+            </div> :
+            null
+          }
+          </div>
         <div className={scoreClasses}>{this.state.score}</div>
       </Col>
     );
