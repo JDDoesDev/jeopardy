@@ -4,30 +4,32 @@ import { Col, Row, Grid } from 'react-bootstrap';
 
 const LoadingScreen = (props) => {
   return (
-    <Grid>
-      <Row className='flex-row'>
-        <Col xs={12}>
-          <div className='prefix'>
-            Welcome to
-          </div>
-        </Col>
-      </Row>
-      <Row>
-        <Col xs={12}>
-          <h1>
-            GEPPARDY
-          </h1>
-        </Col>
-      </Row>
-      { (props.loaded !== true) ?
-      <Row>
-        <Spinner name='pacman' color='black'/>
-      </Row> :
-      <Row>
-        { props.menu }
-      </Row>
-       }
-    </Grid>
+    <div className='title-card-wrapper'>
+      <Grid className='title-card'>
+        <Row className='flex-row'>
+          <Col>
+            <div className='prefix'>
+              Welcome to
+            </div>
+          </Col>
+        </Row>
+        <Row className='flex-row'>
+          <Col>
+            <h1>
+              Drupaldy
+            </h1>
+          </Col>
+        </Row>
+        { (props.loaded !== true) ?
+        <Row className='flex-row'>
+          <Spinner name='pacman' color='white'/>
+        </Row> :
+        <Row className='flex-row'>
+          { props.menu }
+        </Row>
+         }
+      </Grid>
+    </div>
   );
 }
 

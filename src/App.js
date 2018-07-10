@@ -211,7 +211,7 @@ class App extends Component {
 
   selectRoom = () => {
     return (
-      <Row>
+      <Row className='flex-row'>
         { this.state.showHashField ?
           <div>
             <input
@@ -238,10 +238,10 @@ class App extends Component {
 
   buildMenu = () => {
     let menu =
-    <Grid>
+    <Grid >
       {this.selectRoom()}
       <BrowserView device={isBrowser}>
-        <Row>
+        <Row className='flex-row'>
           { this.state.showHashField ?
             null :
             <Button onClick={ this.toggleMenu }>
@@ -257,8 +257,8 @@ class App extends Component {
         </Row>
       </BrowserView>
       <MobileView device={isMobile}>
-        <Row>
-          <Button onClick={ this.handleJoinClick }>
+        <Row className='flex-row'>
+          <Button onClick={ this.handleJoinClick } block>
             <Link id="mobile" to="/mobile">Join Game</Link>
           </Button>
         </Row>
@@ -272,14 +272,14 @@ class App extends Component {
             <Route
               exact path="/"
               render={(props) => <LoadingScreen {...props} loaded={this.state.loadingComplete} menu={menu} />}
-              />
+            />
             <Route
               path="/host"
               render={(props) => <HostScreen {...props} socket={this.socket} roundClues={this.state.roundClues} roomHash={this.state.roomHash} />}
             />
             <Route
               path="/game"
-              render={(props) => <GameScreen {...props} socket={this.socket}  />}
+              render={(props) => <GameScreen {...props} socket={this.socket} gameValue={this.state.gameValue}  />}
             />
             <Route
               path="/mobile"

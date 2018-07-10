@@ -15,7 +15,7 @@ const GameboardColumn = (props) => {
   if (props.round !== 'finalJeopardy' && props.currentColumn.length) {
     columnItems = props.currentColumn.map((item) => {
       return (
-        <Clue onValueAvailable={props.onValueAvailable} key={item.nid} item={item} multiplier={multiplier} socket={props.socket} screenType={props.screenType}/>
+        <Clue onValueAvailable={props.onValueAvailable} key={item.nid} round={props.round} item={item} multiplier={multiplier} socket={props.socket} screenType={props.screenType}/>
       );
     })
   } else {

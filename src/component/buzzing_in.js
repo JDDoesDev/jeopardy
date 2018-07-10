@@ -58,7 +58,7 @@ class BuzzingIn extends Component {
     }
 
     const responses = this.state.receivedBuzzes.map((v, k) => {
-      return <li key={k}>{`${v[0]} ${v[1].name} ${v[2]}`}</li>
+      return <li key={k}>{`Team: ${v[1].name} Player: ${v[2]}`}</li>
     })
     return responses;
   }
@@ -82,7 +82,7 @@ class BuzzingIn extends Component {
   render() {
     return (
       <Col xs={12}>
-        <ul>
+        <ul className='host-list'>
           {this.state.isFinal ? this.state.receivedFinals : this.state.currentBuzzes}
         </ul>
       </Col>

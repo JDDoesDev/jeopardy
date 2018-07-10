@@ -33,7 +33,7 @@ class Buzzer extends Component {
       })
       this.socket.on('view clue', (data) => {
         if (this._isMounted) {
-          this.setState({canAnswer: data.buzzersEnabled, currentClueId: data.nid });
+          this.setState({canAnswer: data.buzzersEnabled, currentClueId: (data.nid ? data.nid : this.state.currentClueId) });
         }
       })
     }
@@ -58,7 +58,7 @@ class Buzzer extends Component {
     return (
       <Col xs={12} className="buzzer-button-wrapper">
         <Button disabled={!this.state.canAnswer} bsStyle="danger" bsSize="large" block onClick={this.buzzIn} >
-          ANSWER!
+          { this.state.canAnswer ? 'ANSWER!' : 'Please Wait...' }
         </Button>
       </Col>
     );

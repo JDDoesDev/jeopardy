@@ -1,6 +1,8 @@
 import React, { Component } from 'react';
 import { Col } from 'react-bootstrap';
 
+import Timer from './timer';
+
 class Team extends Component {
   constructor(props) {
     super(props);
@@ -11,7 +13,8 @@ class Team extends Component {
       id: null,
       players: [],
       active: false,
-      finalWagerSubmitted: false
+      finalWagerSubmitted: false,
+      timer: false
     };
   }
 
@@ -21,15 +24,15 @@ class Team extends Component {
     if (this.socket && Object.keys(this.socket).length) {
       this.socket.on('firsties', (data) => {
         if (this.state.id === Number(data)) {
-          this.setState({active: 'answering'})
+          this.setState({active: 'answering', timer: true})
         }
       })
       this.socket.on('answered', (data) => {
         if (this.state.id === Number(data[0])) {
           if (data[1] === 'right') {
-            this.setState({ active: 'answering right'}, () => {console.log(this.state.active)})
+            this.setState({ active: 'answering right', timer: false }, () => {console.log(this.state.active)})
           } else {
-            this.setState({ active: 'answering wrong'}, () => {console.log(this.state.active)})
+            this.setState({ active: 'answering wrong', timer: false }, () => {console.log(this.state.active)})
           }
         }
       })
@@ -77,6 +80,9 @@ class Team extends Component {
     return (
       <Col xs={12} className={ this.state.active }>
         <div className="team-name ">{this.state.name}</div>
+        { this.state.timer ?
+        <Timer onCountdownComplete={() => this.setState({active: 'answering wrong'})} /> :
+        null }
         <div className="players">
           <ul>
             { this.getPlayers() }

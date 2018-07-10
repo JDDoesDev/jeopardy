@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 
-import { Grid, Row, Jumbotron } from 'react-bootstrap';
+import { Grid, Row, Jumbotron, Col } from 'react-bootstrap';
 
 import Gameboard from './gameboard';
 import Teams from './teams';
@@ -17,13 +17,14 @@ class GameScreen extends Component {
       roundClues: [],
       currentRound: '',
       socketOpen: false,
-      roomHash: '',
+      gameValue: '',
       screenType: 'game'
     };
   }
 
   componentDidMount() {
     this.socket = this.props.socket;
+    this.setState({ gameValue: this.props.gameValue })
     if (this.socket && Object.keys(this.socket).length) {
       this.setState({socketOpen: true});
       this.socket.on('round', (data) => this.setState({ currentRound : data }));
@@ -38,7 +39,19 @@ class GameScreen extends Component {
   }
 
   render() {
-    let gameboardComp = 'Loading clues...';
+    let gameboardComp =
+      <Grid>
+        <Row className='loading-clues'>
+          Loading clues...
+        </Row>
+        <Row className='game-id-wrapper'>
+          Current Game ID:
+          <div className='game-id'>
+            {this.state.gameValue}
+          </div>
+        </Row>
+      </Grid>
+        ;
     let teams = 'Waiting for teams...'
     if (this.socket && Object.keys(this.socket).length) {
       if (this.state.roundClues && Object.keys(this.state.roundClues).length) {

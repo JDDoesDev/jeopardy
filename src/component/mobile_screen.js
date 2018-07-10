@@ -78,7 +78,7 @@ class MobileScreen extends Component {
             }}
             teams={this.state.teams}
           />
-          <Button onClick={this.joinedTeam}>Join Team</Button>
+          <Button onClick={this.joinedTeam} block>Join Team</Button>
         </Col>
       );
     }

@@ -46,7 +46,7 @@ class Clue extends Component {
       clueText: item.clue,
       clueId: item.nid,
       round: this.props.round ? this.props.round : null
-    });
+    }, () => console.log(this.state.round));
 
     if (this.socket && screenType !== 'host') {
       this.socket.on('view clue', (data) => {
@@ -89,7 +89,7 @@ class Clue extends Component {
   openModal = () => {
     const { item } = this.props;
     if (this.state.screenType === 'host') {
-      this.socket.emit('view clue', {'nid': item.nid, 'toDo': 'open', 'buzzersEnabled': true });
+      this.socket.emit('view clue', {'nid': item.nid, 'toDo': 'open' });
     }
     this.setState({modalIsOpen: true, clueViewed: true});
   }
@@ -113,8 +113,13 @@ class Clue extends Component {
     this.setState({modalIsOpen: false});
   }
 
+  enableBuzzers = () => {
+    if (this.state.screenType === 'host') {
+      this.socket.emit('view clue', {'buzzersEnabled': true });
+    }
+  }
+
   getModalDisplay = () => {
-    console.log('displayModal')
     const modalClasses = `clue-modal ${this.state.screenType}`;
     const overlayClasses = `clue-overlay ${this.state.screenType}`;
 
@@ -140,14 +145,16 @@ class Clue extends Component {
       return this.state.clueText;
     }
     let answer = '';
-    let button = '';
+    let closeButton = '';
+    let buzzerButton = '';
     let doubleCover = '';
     let wagerField = '';
     let wagerSubmit = '';
 
     if (this.state.screenType === 'host') {
       answer = <div className='answer'>{this.state.clueAnswer}</div>;
-      button = <Button onClick={this.closeModal}>Close</Button>;
+      closeButton = <Button onClick={this.closeModal}>Close</Button>;
+      buzzerButton = <Button onClick={this.enableBuzzers}>Enable Buzzers</Button>;
       if (this.state.daily) {
         wagerField = <input
           value={ this.state.pointValue }
@@ -166,7 +173,8 @@ class Clue extends Component {
             <Col xs={6}>
               {display()}
               {answer}
-              {button}
+              {closeButton}
+              {buzzerButton}
               {wagerField}
               {wagerSubmit}
             </Col>
@@ -208,7 +216,7 @@ class Clue extends Component {
     let title;
     let classes = 'clue-item';
 
-    if (this.state.round) {
+    if (this.state.round === 'finalJeopardy') {
       classes = 'final-item';
       title = <Col sm={12} className="category-row final-clue"><span onClick={this.openModal}>{entities.decodeHTML(item.category)}</span></Col>;
     } else {

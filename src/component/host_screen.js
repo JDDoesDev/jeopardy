@@ -20,7 +20,8 @@ class HostScreen extends Component {
       sortedClues: false,
       screenType: 'host',
       currentValue:'',
-      room: ''
+      room: '',
+      viewedClues: []
     };
   }
 
@@ -41,7 +42,13 @@ class HostScreen extends Component {
     let teams;
 
     if (this.state.roundClues && Object.keys(this.state.roundClues).length) {
-      gameboardComp = <Gameboard onValueAvailable={(currentValue) => this.setState({ currentValue }, () => {console.log(this.state.currentValue)})} socket={this.socket} clues={this.state.roundClues} currentRound={this.state.currentRound ? this.state.currentRound : 'initial'} screenType={this.state.screenType}/>;
+      gameboardComp = <Gameboard
+        onValueAvailable={(currentValue) => this.setState({ currentValue }, () => {console.log(this.state.currentValue)})}
+        socket={this.socket}
+        clues={this.state.roundClues}
+        currentRound={this.state.currentRound}
+        screenType={this.state.screenType}
+      />;
     }
 
     if (this.socket && Object.keys(this.socket).length) {
