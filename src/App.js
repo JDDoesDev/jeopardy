@@ -218,7 +218,7 @@ class App extends Component {
               value={ this.state.gameValue }
               placeholder='Enter Game ID'
               onChange={event => this.setState({ gameValue: event.target.value })} />
-          </div> :
+          </Col> :
           null
         }
       </Row>
