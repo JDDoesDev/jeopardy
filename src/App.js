@@ -213,7 +213,7 @@ class App extends Component {
     return (
       <Row className='flex-row'>
         { this.state.showHashField ?
-          <div>
+          <Col xs={12 >
             <input
               value={ this.state.gameValue }
               placeholder='Enter Game ID'
@@ -258,9 +258,11 @@ class App extends Component {
       </BrowserView>
       <MobileView device={isMobile}>
         <Row className='flex-row'>
-          <Button onClick={ this.handleJoinClick } block>
-            <Link id="mobile" to="/mobile">Join Game</Link>
-          </Button>
+          <Col xs={12}>
+            <Button onClick={ this.handleJoinClick } block>
+              <Link id="mobile" to="/mobile">Join Game</Link>
+            </Button>
+          </Col>
         </Row>
       </MobileView>
     </Grid>
