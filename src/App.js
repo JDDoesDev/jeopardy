@@ -75,7 +75,7 @@ class App extends Component {
 
     this.redirected = false;
 
-    this.socket = socketIOClient(endpoint, {secure: true, rejectUnauthorized: false});
+    this.socket = socketIOClient(endpoint);
 
     this.setState({ socket: this.socket, roomHash: this.randomString(7) });
 
@@ -96,7 +96,7 @@ class App extends Component {
       });
     }
 
-    if (this.socket) {
+    if (this.socket && Object.keys(this.socket)) {
       this.socket.on('host', (data) => {
         if (data === 'selected') {
           this.setState({ gameStarted: true, gameDisplay: true });
@@ -311,4 +311,4 @@ class App extends Component {
   }
 }
 
-export default hot(module)(App);
+export default App;
