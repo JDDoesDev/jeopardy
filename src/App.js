@@ -75,7 +75,7 @@ class App extends Component {
 
     this.redirected = false;
 
-    this.socket = socketIOClient(endpoint);
+    this.socket = socketIOClient(endpoint, {secure: true, rejectUnauthorized: false});
 
     this.setState({ socket: this.socket, roomHash: this.randomString(7) });
 
