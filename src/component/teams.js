@@ -55,7 +55,11 @@ class Teams extends Component {
       })
       this.socket.on('final jeopardy', (data) => {
         if (data) {
-          this.setState({ finalResponses: [...this.state.finalResponses, data]}, () => console.log(this.state.finalResponses))
+          let teamArray = this.state.teams;
+          teamArray[data.teamId].finalResponseSubmitted = true;
+
+          this.setState({ finalResponses: [...this.state.finalResponses, data], teams: teamArray}, () => console.log(this.state.finalResponses))
+
         }
       })
     }
@@ -77,7 +81,6 @@ class Teams extends Component {
   finalWagerSubmitted = (key) => {
     let teamArray = this.state.teams;
     teamArray[key].finalWagerSubmitted = true;
-    console.log(teamArray);
     this.setState({teams: teamArray}, () => console.log(this.state.teams));
   }
 
@@ -114,10 +117,10 @@ class Teams extends Component {
             {(this.state.currentRound === 'finalJeopardy') ?
             <Row>
               <Col xs={12}>
-                <Button bsStyle='success' onClick={() => this.revealFinalAnswer(k, this.state.finalResponses)} block>Reveal Response</Button>
+                <Button disabled={!this.state.teams[k].finalResponseSubmitted} bsStyle='success' onClick={() => this.revealFinalAnswer(k, this.state.finalResponses)} block>Reveal Response</Button>
               </Col>
               <Col xs={12}>
-                <Button bsStyle='success' onClick={() => this.revealFinalWager(k, this.state.finalResponses)} block>Reveal Wager</Button>
+                <Button disabled={!this.state.teams[k].finalWagerSubmitted} bsStyle='success' onClick={() => this.revealFinalWager(k, this.state.finalResponses)} block>Reveal Wager</Button>
               </Col>
             </Row>
             : null
@@ -157,10 +160,12 @@ class Teams extends Component {
   revealFinalAnswer = (key, answers) => {
     const getCurrentResponse = () => answers.find(val => (val.teamId === key));
     let currentResponse = getCurrentResponse();
-    this.setState({ currentValue: currentResponse.wager});
-    currentResponse.currentTeam = this.state.teams[key].name
-    if (this.socket && Object.keys(this.socket).length) {
-      this.socket.emit('final answer', currentResponse)
+    if (currentResponse) {
+      this.setState({ currentValue: currentResponse.wager ? currentResponse.wager : this.state.currentValue });
+      currentResponse.currentTeam = this.state.teams[key].name
+      if (this.socket && Object.keys(this.socket).length) {
+        this.socket.emit('final answer', currentResponse)
+      }
     }
   }
 
