@@ -213,7 +213,7 @@ class App extends Component {
     return (
       <Row className='flex-row'>
         { this.state.showHashField ?
-          <Col xs={8} xsOffset={4} >
+          <Col xs={8} xsOffset={4} md={12} mdOffset={0} >
             <input
               value={ this.state.gameValue }
               placeholder='Enter Game ID'
