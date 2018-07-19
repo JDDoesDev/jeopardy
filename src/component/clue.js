@@ -74,7 +74,8 @@ class Clue extends Component {
           finalAnswer: data.answer,
           finalWager: data.wager,
           finalPlayerName: data.playerName,
-          finalReceived: true
+          finalReceived: true,
+          revealFinalWager: false
         })
       });
     }
@@ -101,14 +102,15 @@ class Clue extends Component {
     }
   }
 
-  afterOpenModal = () => {
-
-  }
-
   closeModal = () => {
     const { item } = this.props;
     if (this.state.screenType === 'host') {
-      this.socket.emit('view clue', {'nid': item.nid, 'toDo': 'close', 'buzzersEnabled': false });
+      let payload = { 
+        'nid': item.nid,
+        'toDo': 'close', 
+        'buzzersEnabled': false 
+      }
+      this.socket.emit('view clue', payload);
     }
     this.setState({modalIsOpen: false});
   }
