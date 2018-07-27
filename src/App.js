@@ -15,7 +15,6 @@ import socketIOClient from "socket.io-client";
 import 'whatwg-fetch';
 import _ from 'lodash';
 import { Grid, Row, Button, Col } from 'react-bootstrap';
-import { hot } from 'react-hot-loader';
 
 import './App.css';
 import './scss/custom.scss';
